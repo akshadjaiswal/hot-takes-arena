@@ -108,10 +108,10 @@ export async function createTake(
  * Fetch takes with sorting and filtering
  */
 export async function getTakes(
-  params: GetTakesInput = {}
+  params?: GetTakesInput
 ): Promise<ApiSuccess<PaginatedResponse<TakeWithVoteCheck>> | ApiError> {
   try {
-    const validation = getTakesSchema.safeParse(params)
+    const validation = getTakesSchema.safeParse(params || {})
     if (!validation.success) {
       return {
         error: validation.error.errors[0].message,
