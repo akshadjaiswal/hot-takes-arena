@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { CategoryFilter } from '@/components/filters/CategoryFilter'
@@ -10,40 +10,52 @@ import { PostTakeModal } from '@/components/takes/PostTakeModal'
 import { ReportModal } from '@/components/takes/ReportModal'
 import { FloatingActionButton } from '@/components/layout/FloatingActionButton'
 import { getCategories } from '@/lib/actions/categories'
-import { getTakes, getHashedClientIP, createTake } from '@/lib/actions/takes'
-import { createVote, checkUserVotes } from '@/lib/actions/votes'
+import { getTakes, createTake } from '@/lib/actions/takes'
+import { createVote } from '@/lib/actions/votes'
 import { createReport } from '@/lib/actions/reports'
-import { getDeviceFingerprint } from '@/lib/utils/fingerprint'
-import type { Category, SortOption, TakeWithVoteCheck } from '@/lib/types/database.types'
+import {
+  useAppStore,
+  useDeviceFingerprint,
+  useIpHash,
+  useSelectedCategory,
+  useSelectedSort,
+  usePostModalOpen,
+  useOpenPostModal,
+  useClosePostModal,
+  useReportModalOpen,
+  useReportingTakeId,
+  useOpenReportModal,
+  useCloseReportModal,
+} from '@/lib/stores/app-store'
+import type { Category, SortOption } from '@/lib/types/database.types'
 
 export default function Home() {
   const queryClient = useQueryClient()
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedSort, setSelectedSort] = useState<SortOption>('controversial')
-  const [postModalOpen, setPostModalOpen] = useState(false)
-  const [reportModalOpen, setReportModalOpen] = useState(false)
-  const [reportingTakeId, setReportingTakeId] = useState<string | null>(null)
-  const [deviceFingerprint, setDeviceFingerprint] = useState<string>('')
-  const [ipHash, setIpHash] = useState<string>('')
 
-  // Get device fingerprint and IP hash on mount
+  // Zustand store - device identifiers
+  const deviceFingerprint = useDeviceFingerprint()
+  const ipHash = useIpHash()
+  const initializeIdentifiers = useAppStore((state) => state.initializeIdentifiers)
+
+  // Zustand store - filters
+  const selectedCategory = useSelectedCategory()
+  const selectedSort = useSelectedSort()
+  const setCategory = useAppStore((state) => state.setCategory)
+  const setSort = useAppStore((state) => state.setSort)
+
+  // Zustand store - modals
+  const postModalOpen = usePostModalOpen()
+  const openPostModal = useOpenPostModal()
+  const closePostModal = useClosePostModal()
+  const reportModalOpen = useReportModalOpen()
+  const reportingTakeId = useReportingTakeId()
+  const openReportModal = useOpenReportModal()
+  const closeReportModal = useCloseReportModal()
+
+  // Initialize device identifiers on mount
   useEffect(() => {
-    const initIdentifiers = async () => {
-      console.log('[Home] Initializing device identifiers...')
-
-      const fp = await getDeviceFingerprint()
-      console.log('[Home] Device fingerprint:', fp?.substring(0, 8))
-      setDeviceFingerprint(fp)
-
-      const hash = await getHashedClientIP()
-      console.log('[Home] IP hash:', hash?.substring(0, 8))
-      setIpHash(hash)
-
-      console.log('[Home] Device identifiers ready')
-    }
-
-    initIdentifiers()
-  }, [])
+    initializeIdentifiers()
+  }, [initializeIdentifiers])
 
   // Query for categories (cached for 1 hour)
   const { data: categories = [] } = useQuery({
@@ -126,12 +138,7 @@ export default function Home() {
     // Invalidate takes query to show new take
     queryClient.invalidateQueries({ queryKey: ['takes'] })
 
-    setPostModalOpen(false)
-  }
-
-  const handleReport = (takeId: string) => {
-    setReportingTakeId(takeId)
-    setReportModalOpen(true)
+    closePostModal()
   }
 
   const handleSubmitReport = async (reason: string, additionalInfo?: string) => {
@@ -151,8 +158,7 @@ export default function Home() {
       throw new Error(result.error)
     }
 
-    setReportModalOpen(false)
-    setReportingTakeId(null)
+    closeReportModal()
   }
 
   return (
@@ -162,39 +168,36 @@ export default function Home() {
         <CategoryFilter
           categories={categories}
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          onSelectCategory={setCategory}
         />
 
         <SortSelector
           selectedSort={selectedSort}
-          onSelectSort={setSelectedSort}
+          onSelectSort={setSort}
         />
       </div>
 
       {/* Feed Section */}
       <TakeFeed
-        sort={selectedSort}
-        category={selectedCategory}
-        deviceFingerprint={deviceFingerprint}
         onVote={handleVote}
-        onReport={handleReport}
+        onReport={openReportModal}
         fetchTakes={fetchTakes}
       />
 
       {/* Floating Action Button */}
-      <FloatingActionButton onClick={() => setPostModalOpen(true)} />
+      <FloatingActionButton onClick={openPostModal} />
 
       {/* Modals */}
       <PostTakeModal
         open={postModalOpen}
-        onOpenChange={setPostModalOpen}
+        onOpenChange={(open) => open ? openPostModal() : closePostModal()}
         categories={categories}
         onSubmit={handlePostTake}
       />
 
       <ReportModal
         open={reportModalOpen}
-        onOpenChange={setReportModalOpen}
+        onOpenChange={(open) => open ? openReportModal(reportingTakeId || '') : closeReportModal()}
         takeId={reportingTakeId || ''}
         onSubmit={handleSubmitReport}
       />

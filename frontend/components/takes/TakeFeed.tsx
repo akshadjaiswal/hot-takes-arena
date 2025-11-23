@@ -6,12 +6,10 @@ import { Loader2 } from 'lucide-react'
 import { TakeCard } from './TakeCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { checkUserVotes } from '@/lib/actions/votes'
-import type { TakeWithVoteCheck, SortOption, Take } from '@/lib/types/database.types'
+import { useDeviceFingerprint, useSelectedCategory, useSelectedSort } from '@/lib/stores/app-store'
+import type { TakeWithVoteCheck, Take, SortOption } from '@/lib/types/database.types'
 
 interface TakeFeedProps {
-  sort: SortOption
-  category: string | null
-  deviceFingerprint: string
   onVote: (takeId: string, voteType: 'agree' | 'disagree') => Promise<void>
   onReport: (takeId: string) => void
   fetchTakes: (params: {
@@ -26,13 +24,14 @@ interface TakeFeedProps {
 }
 
 export function TakeFeed({
-  sort,
-  category,
-  deviceFingerprint,
   onVote,
   onReport,
   fetchTakes,
 }: TakeFeedProps) {
+  // Get state from Zustand store
+  const sort = useSelectedSort()
+  const category = useSelectedCategory()
+  const deviceFingerprint = useDeviceFingerprint()
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   // Fetch takes

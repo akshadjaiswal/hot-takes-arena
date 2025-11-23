@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { motion } from 'framer-motion'
 import { MoreVertical, Flag } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,7 +22,7 @@ interface TakeCardProps {
   className?: string
 }
 
-export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
+export const TakeCard = memo(function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [userVote, setUserVote] = useState(take.userVote)
   const [localAgreeCount, setLocalAgreeCount] = useState(take.agree_count)
@@ -30,9 +30,12 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
 
   // Sync local userVote state when prop changes (e.g., when vote data loads)
   useEffect(() => {
-    console.log('[TakeCard] Vote status changed for take:', take.id.substring(0, 8), 'userVote:', take.userVote)
-    setUserVote(take.userVote)
-  }, [take.userVote, take.id])
+    // Only update if the vote status actually changed
+    if (take.userVote !== userVote) {
+      console.log('[TakeCard] Vote status changed for take:', take.id.substring(0, 8), 'userVote:', take.userVote)
+      setUserVote(take.userVote)
+    }
+  }, [take.userVote]) // Remove take.id to prevent unnecessary runs
 
   const { agreePercentage, disagreePercentage } = calculateVotePercentages(
     localAgreeCount,
@@ -188,4 +191,4 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
       </Card>
     </motion.div>
   )
-}
+})
