@@ -235,3 +235,51 @@ export async function getVoteCounts(
     }
   }
 }
+
+/**
+ * Batch check user votes for multiple takes
+ * Much more efficient than checking one by one
+ */
+export async function checkUserVotes(
+  takeIds: string[],
+  deviceFingerprint: string
+): Promise<ApiSuccess<Record<string, VoteType>> | ApiError> {
+  try {
+    if (!takeIds.length || !deviceFingerprint) {
+      return { data: {} }
+    }
+
+    const supabase = await createClient()
+
+    const { data: votes, error } = await supabase
+      .from('hottakes_votes')
+      .select('take_id, vote_type')
+      .in('take_id', takeIds)
+      .eq('device_fingerprint', deviceFingerprint)
+
+    if (error) {
+      console.error('Error checking user votes:', error)
+      return {
+        error: 'Failed to check vote status',
+        code: 'DATABASE_ERROR',
+        details: error,
+      }
+    }
+
+    const voteMap: Record<string, VoteType> = {}
+
+    for (const vote of votes || []) {
+      voteMap[vote.take_id] = vote.vote_type
+    }
+
+    return {
+      data: voteMap,
+    }
+  } catch (error) {
+    console.error('Unexpected error checking user votes:', error)
+    return {
+      error: 'An unexpected error occurred',
+      code: 'UNEXPECTED_ERROR',
+    }
+  }
+}

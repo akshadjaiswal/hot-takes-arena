@@ -54,26 +54,29 @@ export function VoteButton({
         variant={isDisabled ? 'outline' : variant}
         size="lg"
         className={cn(
-          'w-full h-12 touch-target relative transition-all',
+          'w-full h-12 sm:h-14 touch-target relative transition-all flex items-center justify-between px-3 sm:px-4',
           isSelectedVote && 'ring-2 ring-stone-900 ring-offset-2',
-          isDisabled && 'cursor-not-allowed',
+          isDisabled && 'cursor-not-allowed opacity-100',
+          !isSelectedVote && hasVoted && 'opacity-70',
           isPressed && 'scale-95'
         )}
         onClick={handleClick}
         disabled={isDisabled}
       >
         {isLoading ? (
-          <Loader2 className="h-5 w-5 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin mx-auto" />
         ) : (
           <>
-            <Icon className={cn('h-5 w-5 mr-2', isSelectedVote && 'fill-current')} />
-            <span className="font-semibold">{label}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Icon className={cn('h-4 w-4 sm:h-5 sm:w-5', isSelectedVote && 'fill-current')} />
+              <span className="font-semibold text-sm sm:text-base">{label}</span>
+            </div>
             {hasVoted && percentage !== undefined && (
               <motion.span
-                className="ml-auto font-bold text-lg"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
+                className="font-bold text-base sm:text-lg"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, type: 'spring' }}
               >
                 {percentage}%
               </motion.span>

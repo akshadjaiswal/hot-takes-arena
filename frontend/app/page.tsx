@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { CategoryFilter } from '@/components/filters/CategoryFilter'
 import { SortSelector } from '@/components/filters/SortSelector'
 import { TakeFeed } from '@/components/takes/TakeFeed'
@@ -9,13 +11,13 @@ import { ReportModal } from '@/components/takes/ReportModal'
 import { FloatingActionButton } from '@/components/layout/FloatingActionButton'
 import { getCategories } from '@/lib/actions/categories'
 import { getTakes, getHashedClientIP, createTake } from '@/lib/actions/takes'
-import { createVote, checkUserVote } from '@/lib/actions/votes'
+import { createVote, checkUserVotes } from '@/lib/actions/votes'
 import { createReport } from '@/lib/actions/reports'
 import { getDeviceFingerprint } from '@/lib/utils/fingerprint'
 import type { Category, SortOption, TakeWithVoteCheck } from '@/lib/types/database.types'
 
 export default function Home() {
-  const [categories, setCategories] = useState<Category[]>([])
+  const queryClient = useQueryClient()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedSort, setSelectedSort] = useState<SortOption>('controversial')
   const [postModalOpen, setPostModalOpen] = useState(false)
@@ -24,31 +26,40 @@ export default function Home() {
   const [deviceFingerprint, setDeviceFingerprint] = useState<string>('')
   const [ipHash, setIpHash] = useState<string>('')
 
-  // Load categories on mount
-  useEffect(() => {
-    const loadCategories = async () => {
-      const result = await getCategories()
-      if ('data' in result) {
-        setCategories(result.data)
-      }
-    }
-
-    loadCategories()
-  }, [])
-
   // Get device fingerprint and IP hash on mount
   useEffect(() => {
     const initIdentifiers = async () => {
+      console.log('[Home] Initializing device identifiers...')
+
       const fp = await getDeviceFingerprint()
+      console.log('[Home] Device fingerprint:', fp?.substring(0, 8))
       setDeviceFingerprint(fp)
 
       const hash = await getHashedClientIP()
+      console.log('[Home] IP hash:', hash?.substring(0, 8))
       setIpHash(hash)
+
+      console.log('[Home] Device identifiers ready')
     }
 
     initIdentifiers()
   }, [])
 
+  // Query for categories (cached for 1 hour)
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      console.log('[Home] Fetching categories...')
+      const result = await getCategories()
+      if ('error' in result) throw new Error(result.error)
+      console.log('[Home] Categories loaded:', result.data.length)
+      return result.data
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour - categories rarely change
+    gcTime: 60 * 60 * 1000, // Keep in cache
+  })
+
+  // Simplified fetchTakes - just returns takes without vote checking
   const fetchTakes = async (params: {
     sort: SortOption
     category?: string
@@ -65,29 +76,8 @@ export default function Home() {
       throw new Error(result.error)
     }
 
-    // Check vote status for each take
-    const takesWithVotes = await Promise.all(
-      result.data.data.map(async (take) => {
-        if (!deviceFingerprint) return take
-
-        const voteResult = await checkUserVote({
-          takeId: take.id,
-          deviceFingerprint,
-        })
-
-        if ('data' in voteResult && voteResult.data.voted) {
-          return {
-            ...take,
-            userVote: voteResult.data.voteType,
-          }
-        }
-
-        return take
-      })
-    )
-
     return {
-      data: takesWithVotes,
+      data: result.data.data,
       hasMore: result.data.hasMore,
       nextCursor: result.data.nextCursor,
     }
@@ -95,6 +85,7 @@ export default function Home() {
 
   const handleVote = async (takeId: string, voteType: 'agree' | 'disagree') => {
     if (!deviceFingerprint || !ipHash) {
+      toast.error('Error', { description: 'Device identification failed' })
       throw new Error('Device identification failed')
     }
 
@@ -106,12 +97,18 @@ export default function Home() {
     })
 
     if ('error' in result) {
+      // Throw error so TakeCard can catch it and display toast
       throw new Error(result.error)
     }
+
+    // Invalidate queries to refetch data
+    queryClient.invalidateQueries({ queryKey: ['takes'] })
+    queryClient.invalidateQueries({ queryKey: ['user-votes'] })
   }
 
   const handlePostTake = async (content: string, category: string) => {
     if (!deviceFingerprint || !ipHash) {
+      toast.error('Error', { description: 'Device identification failed' })
       throw new Error('Device identification failed')
     }
 
@@ -126,7 +123,9 @@ export default function Home() {
       throw new Error(result.error)
     }
 
-    // Close modal and refresh feed
+    // Invalidate takes query to show new take
+    queryClient.invalidateQueries({ queryKey: ['takes'] })
+
     setPostModalOpen(false)
   }
 
@@ -176,6 +175,7 @@ export default function Home() {
       <TakeFeed
         sort={selectedSort}
         category={selectedCategory}
+        deviceFingerprint={deviceFingerprint}
         onVote={handleVote}
         onReport={handleReport}
         fetchTakes={fetchTakes}
