@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { motion } from 'framer-motion'
 import { MoreVertical, Flag } from 'lucide-react'
 import { toast } from 'sonner'
@@ -22,13 +22,24 @@ interface TakeCardProps {
   className?: string
 }
 
-export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
+export const TakeCard = memo(function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
   const [isVoting, setIsVoting] = useState(false)
   const [userVote, setUserVote] = useState(take.userVote)
+  const [localAgreeCount, setLocalAgreeCount] = useState(take.agree_count)
+  const [localDisagreeCount, setLocalDisagreeCount] = useState(take.disagree_count)
+
+  // Sync local userVote state when prop changes (e.g., when vote data loads)
+  useEffect(() => {
+    // Only update if the vote status actually changed
+    if (take.userVote !== userVote) {
+      console.log('[TakeCard] Vote status changed for take:', take.id.substring(0, 8), 'userVote:', take.userVote)
+      setUserVote(take.userVote)
+    }
+  }, [take.userVote]) // Remove take.id to prevent unnecessary runs
 
   const { agreePercentage, disagreePercentage } = calculateVotePercentages(
-    take.agree_count,
-    take.disagree_count
+    localAgreeCount,
+    localDisagreeCount
   )
 
   const hasVoted = !!userVote
@@ -46,7 +57,15 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
     setIsVoting(true)
     try {
       await onVote(take.id, voteType)
+
+      // Optimistically update local state
       setUserVote(voteType)
+
+      if (voteType === 'agree') {
+        setLocalAgreeCount(prev => prev + 1)
+      } else {
+        setLocalDisagreeCount(prev => prev + 1)
+      }
 
       // Success toast with haptic feedback
       if ('vibrate' in navigator) {
@@ -126,7 +145,7 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
           </div>
 
           {/* Voting buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <VoteButton
               voteType="agree"
               percentage={hasVoted ? agreePercentage : undefined}
@@ -156,7 +175,7 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
               <HeatMeter
                 agreePercentage={agreePercentage}
                 disagreePercentage={disagreePercentage}
-                totalVotes={take.total_votes}
+                totalVotes={localAgreeCount + localDisagreeCount}
               />
             </motion.div>
           )}
@@ -172,4 +191,4 @@ export function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
       </Card>
     </motion.div>
   )
-}
+})
