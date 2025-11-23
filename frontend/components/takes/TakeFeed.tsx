@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useMemo } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Flame } from 'lucide-react'
 import { TakeCard } from './TakeCard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EmptyState } from '@/components/ui/empty-state'
 import { checkUserVotes } from '@/lib/actions/votes'
-import { useDeviceFingerprint, useSelectedCategory, useSelectedSort } from '@/lib/stores/app-store'
-import type { TakeWithVoteCheck, Take, SortOption } from '@/lib/types/database.types'
+import { useDeviceFingerprint, useSelectedCategory, useSelectedSort, useOpenPostModal } from '@/lib/stores/app-store'
+import type { TakeWithVoteCheck, Take, SortOption} from '@/lib/types/database.types'
 
 interface TakeFeedProps {
   onVote: (takeId: string, voteType: 'agree' | 'disagree') => Promise<void>
@@ -32,6 +33,7 @@ export function TakeFeed({
   const sort = useSelectedSort()
   const category = useSelectedCategory()
   const deviceFingerprint = useDeviceFingerprint()
+  const openPostModal = useOpenPostModal()
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
   // Fetch takes
@@ -168,12 +170,15 @@ export function TakeFeed({
   // Empty state
   if (takesWithVotes.length === 0 && !isLoading) {
     return (
-      <div className="rounded-card border bg-surface p-8 text-center space-y-2">
-        <p className="text-lg font-medium">No takes found</p>
-        <p className="text-text-secondary">
-          Be the first to share a hot take in this category!
-        </p>
-      </div>
+      <EmptyState
+        icon="🤷"
+        title="No takes found"
+        description="Be the first to share a hot take in this category!"
+        action={{
+          label: 'Drop a Take',
+          onClick: openPostModal,
+        }}
+      />
     )
   }
 
@@ -206,9 +211,16 @@ export function TakeFeed({
       </div>
 
       {!hasNextPage && takesWithVotes.length > 0 && (
-        <div className="text-center py-4 text-text-secondary text-sm">
-          You've reached the end!
-        </div>
+        <EmptyState
+          icon="🎉"
+          title="You've seen it all!"
+          description="Drop your own hot take to keep the fire burning"
+          action={{
+            label: 'Drop a Take',
+            onClick: openPostModal,
+          }}
+          className="pt-8 pb-32"
+        />
       )}
     </div>
   )
