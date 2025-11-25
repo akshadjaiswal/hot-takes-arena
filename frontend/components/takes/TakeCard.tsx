@@ -37,6 +37,27 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
     }
   }, [take.userVote]) // Remove take.id to prevent unnecessary runs
 
+  // Show "Content Removed" placeholder for hidden takes
+  if (take.is_hidden) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={className}
+      >
+        <Card className="relative">
+          <CardContent className="p-6 text-center space-y-2">
+            <p className="text-stone-500 font-medium">🚫 This take was removed</p>
+            {take.hidden_reason && (
+              <p className="text-xs text-stone-400">{take.hidden_reason}</p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    )
+  }
+
   const { agreePercentage, disagreePercentage } = calculateVotePercentages(
     localAgreeCount,
     localDisagreeCount

@@ -11,6 +11,7 @@ const buttonVariants = cva(
         default: 'bg-stone-900 text-white hover:bg-stone-800',
         agree: 'bg-agree-light hover:bg-agree-dark text-stone-900 font-semibold',
         disagree: 'bg-disagree-light hover:bg-disagree-dark text-stone-900 font-semibold',
+        destructive: 'bg-red-500 text-white hover:bg-red-600',
         outline: 'border border-stone-300 bg-white hover:bg-stone-50',
         ghost: 'hover:bg-stone-100',
         link: 'text-stone-900 underline-offset-4 hover:underline',
