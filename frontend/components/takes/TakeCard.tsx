@@ -2,7 +2,7 @@
 
 import { useState, useEffect, memo } from 'react'
 import { motion } from 'framer-motion'
-import { MoreVertical, Flag } from 'lucide-react'
+import { Flag, Link2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -64,6 +64,21 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
   )
 
   const hasVoted = !!userVote
+
+  const handleCopyLink = async () => {
+    try {
+      const url = `${window.location.origin}/?take=${take.id}`
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copied', {
+        description: 'Share this take and spark a debate',
+      })
+    } catch (error) {
+      console.error('Failed to copy take link', error)
+      toast.error('Copy failed', {
+        description: 'Try again or copy the URL manually',
+      })
+    }
+  }
 
   const handleVote = async (voteType: 'agree' | 'disagree') => {
     if (hasVoted || isVoting) {
@@ -136,6 +151,16 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
             </Badge>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleCopyLink}
+              >
+                <Link2 className="h-4 w-4" />
+                <span className="sr-only">Copy take link</span>
+              </Button>
+
               {/* Controversy badge */}
               <ControversyBadge
                 agreeCount={take.agree_count}
