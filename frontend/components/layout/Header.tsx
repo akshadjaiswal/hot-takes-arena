@@ -13,8 +13,11 @@ export function Header() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500">
-            <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="relative">
+            <span className="absolute inset-[-6px] rounded-full bg-gradient-to-br from-amber-200/60 to-orange-400/50 blur-md animate-pulse-slow" aria-hidden="true" />
+            <div className="relative flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-amber-300 to-orange-500 shadow-sm">
+              <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            </div>
           </div>
           <div>
             <h1 className="text-base sm:text-xl font-bold tracking-tight">

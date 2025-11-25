@@ -181,6 +181,7 @@ export default function Home() {
       <TakeFeed
         onVote={handleVote}
         onReport={openReportModal}
+        categories={categories}
         fetchTakes={fetchTakes}
       />
 
