@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { QueryProvider } from '@/lib/query-provider'
@@ -26,6 +26,9 @@ export const metadata: Metadata = {
     description: 'Where opinions collide - Share your hot takes anonymously',
     type: 'website',
   },
+}
+
+export const viewport: Viewport = {
   themeColor: '#EF4444',
 }
 
