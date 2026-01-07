@@ -23,7 +23,7 @@ interface TakeCardProps {
 }
 
 export const TakeCard = memo(function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
-  const [isVoting, setIsVoting] = useState(false)
+  const [votingType, setVotingType] = useState<'agree' | 'disagree' | null>(null)
   const [userVote, setUserVote] = useState(take.userVote)
   const [localAgreeCount, setLocalAgreeCount] = useState(take.agree_count)
   const [localDisagreeCount, setLocalDisagreeCount] = useState(take.disagree_count)
@@ -81,7 +81,7 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
   }
 
   const handleVote = async (voteType: 'agree' | 'disagree') => {
-    if (hasVoted || isVoting) {
+    if (hasVoted || votingType !== null) {
       if (hasVoted) {
         toast.error('Already Voted', {
           description: `You've already ${userVote}d on this take`,
@@ -90,7 +90,7 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
       return
     }
 
-    setIsVoting(true)
+    setVotingType(voteType)
     try {
       await onVote(take.id, voteType)
 
@@ -131,7 +131,7 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
         })
       }
     } finally {
-      setIsVoting(false)
+      setVotingType(null)
     }
   }
 
@@ -197,7 +197,7 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
               percentage={hasVoted ? agreePercentage : undefined}
               hasVoted={hasVoted}
               userVote={userVote}
-              isLoading={isVoting}
+              isLoading={votingType === 'agree'}
               onVote={() => handleVote('agree')}
             />
 
@@ -206,7 +206,7 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
               percentage={hasVoted ? disagreePercentage : undefined}
               hasVoted={hasVoted}
               userVote={userVote}
-              isLoading={isVoting}
+              isLoading={votingType === 'disagree'}
               onVote={() => handleVote('disagree')}
             />
           </div>
