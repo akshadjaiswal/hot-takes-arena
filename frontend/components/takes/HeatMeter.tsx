@@ -1,6 +1,6 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface HeatMeterProps {
@@ -16,6 +16,8 @@ export function HeatMeter({
   totalVotes,
   className,
 }: HeatMeterProps) {
+  const prefersReducedMotion = useReducedMotion()
+
   return (
     <div className={cn('space-y-2', className)}>
       {/* Percentage labels */}
@@ -26,13 +28,17 @@ export function HeatMeter({
       </div>
 
       {/* Heat meter bar */}
-      <div className="relative h-2 w-full bg-stone-200 rounded-full overflow-hidden">
+      <div
+        className="relative h-2 w-full bg-stone-200 rounded-full overflow-hidden"
+        role="img"
+        aria-label={`Vote distribution: ${agreePercentage}% agree, ${disagreePercentage}% disagree out of ${totalVotes} votes`}
+      >
         {/* Agree side (left) */}
         <motion.div
           className="absolute left-0 top-0 h-full bg-gradient-to-r from-agree-light to-agree-dark"
           initial={{ width: '50%' }}
           animate={{ width: `${agreePercentage}%` }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
         />
 
         {/* Disagree side (right) */}
@@ -40,7 +46,7 @@ export function HeatMeter({
           className="absolute right-0 top-0 h-full bg-gradient-to-l from-disagree-light to-disagree-dark"
           initial={{ width: '50%' }}
           animate={{ width: `${disagreePercentage}%` }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.3, ease: 'easeOut' }}
         />
 
         {/* Center line indicator (50/50 mark) */}
