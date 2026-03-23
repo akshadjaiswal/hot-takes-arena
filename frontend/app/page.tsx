@@ -61,10 +61,8 @@ export default function Home() {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      console.log('[Home] Fetching categories...')
       const result = await getCategories()
       if ('error' in result) throw new Error(result.error)
-      console.log('[Home] Categories loaded:', result.data.length)
       return result.data
     },
     staleTime: 60 * 60 * 1000, // 1 hour - categories rarely change

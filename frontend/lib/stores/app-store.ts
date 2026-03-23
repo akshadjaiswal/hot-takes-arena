@@ -39,35 +39,24 @@ export const useAppStore = create<AppStore>()(
 
       // Device Identifiers - Actions
       setDeviceFingerprint: (fp) => {
-        console.log('[AppStore] Device fingerprint set:', fp?.substring(0, 8))
         set({ deviceFingerprint: fp })
       },
 
       setIpHash: (hash) => {
-        console.log('[AppStore] IP hash set:', hash?.substring(0, 8))
         set({ ipHash: hash })
       },
 
       initializeIdentifiers: async () => {
-        console.log('[AppStore] Initializing device identifiers...')
-
         try {
-          // Get device fingerprint
           const fp = await getDeviceFingerprint()
           set({ deviceFingerprint: fp })
-          console.log('[AppStore] Device fingerprint loaded:', fp?.substring(0, 8))
 
-          // Get IP hash
           const hash = await getHashedClientIP()
           set({ ipHash: hash })
-          console.log('[AppStore] IP hash loaded:', hash?.substring(0, 8))
 
-          // Mark as ready
           set({ isIdentifiersReady: true })
-          console.log('[AppStore] Device identifiers ready')
         } catch (error) {
           console.error('[AppStore] Failed to initialize identifiers:', error)
-          // Set fallback values
           set({
             deviceFingerprint: 'unknown',
             ipHash: 'unknown',
@@ -82,12 +71,10 @@ export const useAppStore = create<AppStore>()(
 
       // Filter State - Actions
       setCategory: (category) => {
-        console.log('[AppStore] Category changed:', category)
         set({ selectedCategory: category })
       },
 
       setSort: (sort) => {
-        console.log('[AppStore] Sort changed:', sort)
         set({ selectedSort: sort })
       },
 
@@ -98,22 +85,18 @@ export const useAppStore = create<AppStore>()(
 
       // Modal State - Actions
       openPostModal: () => {
-        console.log('[AppStore] Opening post modal')
         set({ postModalOpen: true })
       },
 
       closePostModal: () => {
-        console.log('[AppStore] Closing post modal')
         set({ postModalOpen: false })
       },
 
       openReportModal: (takeId) => {
-        console.log('[AppStore] Opening report modal for take:', takeId)
         set({ reportModalOpen: true, reportingTakeId: takeId })
       },
 
       closeReportModal: () => {
-        console.log('[AppStore] Closing report modal')
         set({ reportModalOpen: false, reportingTakeId: null })
       },
     }),

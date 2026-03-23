@@ -126,9 +126,7 @@ export function TakeFeed({
   // Get all take IDs from all pages
   const takeIds = useMemo(() => {
     if (!data?.pages) return []
-    const ids = data.pages.flatMap(page => page.data.map(take => take.id))
-    console.log('[TakeFeed] Computed takeIds:', ids.length, 'takes')
-    return ids
+    return data.pages.flatMap(page => page.data.map(take => take.id))
   }, [data])
 
   // Create stable query key from takeIds by sorting and joining
@@ -140,20 +138,11 @@ export function TakeFeed({
   const { data: userVotes = {}, isLoading: isLoadingVotes } = useQuery({
     queryKey: ['user-votes', takeIdsKey, deviceFingerprint],
     queryFn: async () => {
-      console.log('[TakeFeed] Fetching votes for', takeIds.length, 'takes with fingerprint:', deviceFingerprint?.substring(0, 8))
-
-      if (!deviceFingerprint || !takeIds.length) {
-        console.log('[TakeFeed] Skipping vote check - missing fingerprint or no takes')
-        return {}
-      }
+      if (!deviceFingerprint || !takeIds.length) return {}
 
       const result = await checkUserVotes(takeIds, deviceFingerprint)
-      if ('error' in result) {
-        console.error('[TakeFeed] Failed to check votes:', result.error)
-        return {}
-      }
+      if ('error' in result) return {}
 
-      console.log('[TakeFeed] Vote check result:', Object.keys(result.data).length, 'votes found')
       return result.data
     },
     enabled: !!deviceFingerprint && takeIds.length > 0,
@@ -165,7 +154,7 @@ export function TakeFeed({
   const takesWithVotes = useMemo<TakeWithVoteCheck[]>(() => {
     if (!data?.pages) return []
 
-    const merged = data.pages.flatMap(page =>
+    return data.pages.flatMap(page =>
       page.data.map(take => ({
         ...take,
         userVote: userVotes[take.id] || null,
@@ -177,11 +166,6 @@ export function TakeFeed({
           : 50,
       }))
     )
-
-    const votedCount = merged.filter(t => t.userVote).length
-    console.log('[TakeFeed] Merged data:', merged.length, 'takes,', votedCount, 'with user votes')
-
-    return merged
   }, [data, userVotes])
 
   const formatNumber = (value: number) =>

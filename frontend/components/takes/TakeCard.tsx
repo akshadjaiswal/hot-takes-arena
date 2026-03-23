@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, memo } from 'react'
-import { motion } from 'framer-motion'
-import { Flag, Link2 } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { Flag, Link2, Ban } from 'lucide-react'
 import { toast } from 'sonner'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,7 @@ interface TakeCardProps {
 }
 
 export const TakeCard = memo(function TakeCard({ take, onVote, onReport, className }: TakeCardProps) {
+  const prefersReducedMotion = useReducedMotion()
   const [votingType, setVotingType] = useState<'agree' | 'disagree' | null>(null)
   const [userVote, setUserVote] = useState(take.userVote)
   const [localAgreeCount, setLocalAgreeCount] = useState(take.agree_count)
@@ -30,25 +31,26 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
 
   // Sync local userVote state when prop changes (e.g., when vote data loads)
   useEffect(() => {
-    // Only update if the vote status actually changed
     if (take.userVote !== userVote) {
-      console.log('[TakeCard] Vote status changed for take:', take.id.substring(0, 8), 'userVote:', take.userVote)
       setUserVote(take.userVote)
     }
-  }, [take.userVote]) // Remove take.id to prevent unnecessary runs
+  }, [take.userVote])
 
   // Show "Content Removed" placeholder for hidden takes
   if (take.is_hidden) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
         className={className}
       >
         <Card className="relative">
           <CardContent className="p-6 text-center space-y-2">
-            <p className="text-stone-500 font-medium">🚫 This take was removed</p>
+            <p className="text-stone-500 font-medium flex items-center justify-center gap-2">
+              <Ban className="h-4 w-4" aria-hidden="true" />
+              This take was removed
+            </p>
             {take.hidden_reason && (
               <p className="text-xs text-stone-400">{take.hidden_reason}</p>
             )}
@@ -137,9 +139,9 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
       className={className}
     >
       <Card className="relative">
@@ -214,9 +216,9 @@ export const TakeCard = memo(function TakeCard({ take, onVote, onReport, classNa
           {/* Heat meter (shown after voting) */}
           {hasVoted && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, height: prefersReducedMotion ? 'auto' : 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
             >
               <HeatMeter
                 agreePercentage={agreePercentage}
