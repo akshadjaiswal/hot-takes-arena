@@ -3,7 +3,7 @@
 import { useEffect, useRef, useMemo } from 'react'
 import type { ComponentType, SVGProps } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { Loader2, Flame, Sparkles, BarChart3, Activity, TrendingUp } from 'lucide-react'
+import { Loader2, Flame, Sparkles, BarChart3, Activity, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react'
 import { TakeCard } from './TakeCard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -50,6 +50,7 @@ export function TakeFeed({
     isLoading,
     isError,
     error,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ['takes', sort, category],
     queryFn: ({ pageParam }) =>
@@ -240,10 +241,21 @@ export function TakeFeed({
   // Error state
   if (isError) {
     return (
-      <div className="rounded-card border bg-surface p-8 text-center">
-        <p className="text-text-secondary">
-          {error instanceof Error ? error.message : 'Failed to load takes'}
+      <div className="rounded-card border bg-surface p-8 flex flex-col items-center gap-3 text-center shadow-sm">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 border border-red-100">
+          <AlertCircle className="h-6 w-6 text-red-400" />
+        </div>
+        <p className="text-sm font-medium text-text-primary">Failed to load takes</p>
+        <p className="text-xs text-text-secondary max-w-xs">
+          {error instanceof Error ? error.message : 'Something went wrong. Please try again.'}
         </p>
+        <button
+          onClick={() => refetch()}
+          className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 transition-colors"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Try again
+        </button>
       </div>
     )
   }
