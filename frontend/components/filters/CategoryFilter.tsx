@@ -1,6 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Category } from '@/lib/types/database.types'
 import { cn } from '@/lib/utils'
 
@@ -17,6 +18,19 @@ export function CategoryFilter({
   onSelectCategory,
   className,
 }: CategoryFilterProps) {
+  if (categories.length === 0) {
+    return (
+      <div className={cn('space-y-3', className)}>
+        <Skeleton className="h-4 w-32" />
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <Skeleton key={i} className="h-8 w-20 rounded-full" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('space-y-3', className)}>
       <h3 className="text-sm font-medium text-text-secondary">Filter by Category</h3>
