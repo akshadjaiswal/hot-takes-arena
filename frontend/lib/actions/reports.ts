@@ -2,7 +2,8 @@
 
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
-import type { Report, TakeWithReports } from '@/lib/types/database.types'
+import type { Database, Report, TakeWithReports } from '@/lib/types/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import type {
   CreateReportInput,
   UpdateReportInput,
@@ -176,9 +177,10 @@ export async function updateReportStatus(
       }
     }
 
-    const supabase = createServiceRoleClient()
+    const supabase: SupabaseClient<Database> = createServiceRoleClient()
 
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from('hottakes_reports')
       .update({
         status: input.status,
@@ -230,9 +232,10 @@ export async function hideTake(
 
     const { takeId, hidden, reason } = validation.data
 
-    const supabase = createServiceRoleClient()
+    const supabase: SupabaseClient<Database> = createServiceRoleClient()
 
-    const { error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any)
       .from('hottakes_takes')
       .update({
         is_hidden: hidden,
