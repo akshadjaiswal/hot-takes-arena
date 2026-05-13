@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 import type { Report, TakeWithReports } from '@/lib/types/database.types'
 import type {
@@ -120,7 +120,7 @@ export async function getReports(
     // TODO: Add admin authentication check here
     // For now, we'll assume this is called from an authenticated admin route
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
     let query = supabase
       .from('hottakes_reports')
@@ -176,7 +176,7 @@ export async function updateReportStatus(
       }
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
     const { data, error } = await supabase
       .from('hottakes_reports')
@@ -230,7 +230,7 @@ export async function hideTake(
 
     const { takeId, hidden, reason } = validation.data
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
     const { error } = await supabase
       .from('hottakes_takes')
@@ -269,7 +269,7 @@ export async function getReportsForTake(
   takeId: string
 ): Promise<ApiSuccess<Report[]> | ApiError> {
   try {
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
     const { data, error } = await supabase
       .from('hottakes_reports')
